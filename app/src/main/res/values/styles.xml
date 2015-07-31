@@ -1,0 +1,48 @@
+<resources>
+
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="Theme.AppCompat">
+        <!-- Customize your theme here. -->
+        <item name="android:windowBackground">@color/generalBackground</item>
+        <item name="android:actionBarStyle">@style/MyActionBar</item>
+        <item name="android:buttonStyle">@android:style/ButtonBar</item>
+
+        <!-- Support library compatibility -->
+        <item name="actionBarStyle">@style/MyActionBar</item>
+    </style>
+
+    <!-- ActionBar styles -->
+    <style name="MyActionBar"
+           parent="@style/Widget.AppCompat.Light.ActionBar.Solid.Inverse">
+        <item name="android:background">@drawable/action_bar</item>
+
+        <!-- Support library compatibility -->
+        <item name="background">@drawable/action_bar</item>
+    </style>
+
+    <style name="DarkFullScreen" parent="Theme.AppCompat">
+        <item name="android:windowActionBarOverlay">true</item>
+        <item name="android:actionBarStyle">@style/SemiTransparentActionBar</item>
+
+        <!-- Support library compatibility -->
+        <item name="windowActionBarOverlay">true</item>
+        <item name="actionBarStyle">@style/SemiTransparentActionBar</item>
+    </style>
+
+    <style name="SemiTransparentActionBar" parent="@style/Widget.AppCompat.Light.ActionBar.Solid.Inverse">
+        <item name="android:background">@color/BlackSemiTransparent</item>
+
+        <!-- Support library compatibility -->
+        <item name="background">@color/BlackSemiTransparent</item>
+    </style>
+
+    <style name="DescriptionTextStyle" parent="Base.TextAppearance.AppCompat.Medium">
+        <item name="android:textSize">@dimen/description_text_size</item>
+        <item name="android:textColor">@color/descriptionTextColor</item>
+    </style>
+
+    <style name="DateTextStyle" parent="Base.TextAppearance.AppCompat.Medium">
+        <item name="android:textColor">@color/dateTextColor</item>
+    </style>
+
+</resources>

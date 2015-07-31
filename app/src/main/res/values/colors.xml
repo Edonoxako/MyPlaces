@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="BlackSemiTransparent">#5000</color>
+
+    <color name="generalBackground">#717171</color>
+    <color name="listBackground">#222222</color>
+    <color name="dateTextColor">#777777</color>
+    <color name="descriptionTextColor">#ffffff</color>
+</resources>

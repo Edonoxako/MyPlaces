@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="horizontal"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent">
+
+    <com.edonoxako.geophoto.app.ui.SquaredImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/listItemImage" android:src="@android:drawable/ic_menu_recent_history"
+            android:layout_weight="4" android:layout_gravity="center_vertical" android:cropToPadding="true"/>
+    <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" android:id="@+id/textContent" android:layout_weight="1"
+            android:gravity="left|center_vertical" android:layout_marginLeft="10dp">
+        <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:id="@+id/placeDescriptionItemTextView" style="@style/DescriptionTextStyle"/>
+        <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:id="@+id/dateItemTextView" android:textColor="@color/dateTextColor"
+                style="@style/DateTextStyle"/>
+    </LinearLayout>
+</LinearLayout>

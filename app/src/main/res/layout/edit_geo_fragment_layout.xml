@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                  android:orientation="vertical"
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content" android:id="@+id/editGeoLayout" android:measureWithLargestChild="true"
+                  android:paddingLeft="5dp" android:paddingRight="5dp">
+
+        <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:text="@string/edit_description_text"
+                android:id="@+id/editDescriptionTextView"/>
+        <EditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textMultiLine"
+                android:ems="10"
+                android:id="@+id/editDescriptionText"/>
+        <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:text="@string/edit_latitude_text"
+                android:id="@+id/editLatitudeTextView"/>
+        <EditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:id="@+id/latitudeEditText" android:numeric="decimal" android:inputType="numberSigned|numberDecimal"/>
+        <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:text="@string/edit_longitude_text"
+                android:id="@+id/editLongitudeTextView"/>
+        <EditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="numberSigned|numberDecimal"
+                android:ems="10"
+                android:id="@+id/longitudeEditText" android:numeric="decimal"/>
+
+    <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+        <EditText
+                android:layout_width="150dp"
+                android:layout_height="wrap_content"
+                android:inputType="date"
+                android:ems="10"
+                android:id="@+id/dateEditText" android:layout_gravity="bottom" android:gravity="center"
+                />
+        <ImageButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/calendarBtn" android:src="@drawable/ic_calendar"
+                android:layout_weight="1" android:background="@drawable/button"/>
+    </LinearLayout>
+    <GridView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/editPhotoGridView"
+                android:layout_marginTop="10dp" android:columnWidth="@dimen/grid_cell_width"
+                android:drawSelectorOnTop="false" android:numColumns="auto_fit"
+                android:fastScrollEnabled="false"/>
+    </LinearLayout>
