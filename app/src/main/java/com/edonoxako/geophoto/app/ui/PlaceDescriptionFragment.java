@@ -1,9 +1,14 @@
 package com.edonoxako.geophoto.app.ui;
 
 import android.app.Activity;
+
+
+import android.app.LoaderManager;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+
 import android.support.v7.app.AppCompatActivity;
 import android.view.*;
 import android.widget.AdapterView;
@@ -12,7 +17,9 @@ import android.widget.TextView;
 import com.edonoxako.geophoto.app.R;
 import com.edonoxako.geophoto.app.RepoApp;
 import com.edonoxako.geophoto.app.adapters.PhotoGridAdapter;
-import com.edonoxako.geophoto.app.backend.PlaceData;
+import com.edonoxako.geophoto.app.backend.DataBase;
+import com.edonoxako.geophoto.app.backend.callbacks.PlaceCallback;
+import com.edonoxako.geophoto.app.backend.loaders.LoadersFactory;
 import com.edonoxako.geophoto.app.ui.interfaces.BackNavigateListener;
 import com.edonoxako.geophoto.app.ui.interfaces.PresenterActivityListener;
 
@@ -35,7 +42,6 @@ public class PlaceDescriptionFragment extends Fragment implements PresenterActiv
 
     private TextView lastVisitedTextView;
     private int mPlaceId;
-    public static final String PLACE_ID_ARGUMENT = "placeId";
 
     public PlaceDescriptionFragment() {
     }
@@ -43,7 +49,7 @@ public class PlaceDescriptionFragment extends Fragment implements PresenterActiv
     public static PlaceDescriptionFragment newInstance(int placeId) {
         PlaceDescriptionFragment fragment = new PlaceDescriptionFragment();
         Bundle args = new Bundle();
-        args.putInt(PLACE_ID_ARGUMENT, placeId);
+        args.putInt(RepoApp.PLACE_ID_EXTRA, placeId);
         fragment.setArguments(args);
         return fragment;
     }
@@ -64,8 +70,8 @@ public class PlaceDescriptionFragment extends Fragment implements PresenterActiv
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
-        mPlaceId = getArguments().getInt(PLACE_ID_ARGUMENT);
-        adapter = new PhotoGridAdapter(getActivity(), mPlaceId);
+        mPlaceId = getArguments().getInt(RepoApp.PLACE_ID_EXTRA);
+        adapter = new PhotoGridAdapter(getActivity(), null, 0);
     }
 
     @Nullable
@@ -92,9 +98,26 @@ public class PlaceDescriptionFragment extends Fragment implements PresenterActiv
         super.onActivityCreated(savedInstanceState);
         ((AppCompatActivity) getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         listener.setPlaceDescriptionFragment(this);
-        PlaceData place = RepoApp.getInstance().getPlaces().get(mPlaceId);
-        descriptionTextView.setText(place.getText());
-        lastVisitedTextView.setText(place.getLastVisited());
+
+        LoaderManager.LoaderCallbacks placeCallback = new PlaceCallback(getActivity(), new PlaceCallback.LoaderListener() {
+            @Override
+            public void onDataFetched(Cursor cursor) {
+                if (cursor.moveToFirst()) {
+                    descriptionTextView.setText(cursor.getString(cursor.getColumnIndex(DataBase.PLACES_TEXT_COLUMN)));
+                    lastVisitedTextView.setText(cursor.getString(cursor.getColumnIndex(DataBase.PLACES_LAST_VISITED_COLUMN)));
+                }
+            }
+        });
+        getActivity().getLoaderManager().restartLoader(LoadersFactory.FETCH_PLACE_LOADER, getArguments(), placeCallback);
+
+        LoaderManager.LoaderCallbacks photosCallback = new PlaceCallback(getActivity(), new PlaceCallback.LoaderListener() {
+            @Override
+            public void onDataFetched(Cursor cursor) {
+                adapter.swapCursor(cursor);
+            }
+        });
+        getActivity().getLoaderManager().restartLoader(LoadersFactory.FETCH_PHOTOS_LOADER, getArguments(), photosCallback);
+
         photoGridView.setAdapter(adapter);
     }
 
@@ -119,6 +142,8 @@ public class PlaceDescriptionFragment extends Fragment implements PresenterActiv
 
     @Override
     public void onPlacesLoaded() {
+        getActivity().getLoaderManager().getLoader(LoadersFactory.FETCH_PHOTOS_LOADER).forceLoad();
+        getActivity().getLoaderManager().getLoader(LoadersFactory.FETCH_PLACE_LOADER).forceLoad();
         adapter.notifyDataSetChanged();
     }
 

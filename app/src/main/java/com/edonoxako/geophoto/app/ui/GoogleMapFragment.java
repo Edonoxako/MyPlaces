@@ -1,12 +1,14 @@
 package com.edonoxako.geophoto.app.ui;
 
 import android.app.Activity;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.Toast;
+import com.edonoxako.geophoto.app.backend.DataBase;
 import com.edonoxako.geophoto.app.ui.interfaces.DetailedDescriptionInterface;
 import com.edonoxako.geophoto.app.R;
 import com.edonoxako.geophoto.app.RepoApp;
@@ -122,10 +124,21 @@ public class GoogleMapFragment extends SupportMapFragment implements PresenterAc
     @Override
     public void onPlacesLoaded() {
         map.clear();
-        List<PlaceData> places = RepoApp.getInstance().getPlaces();
+        /*List<PlaceData> places = RepoApp.getInstance().getPlaces();
         for (int i = 0; i < places.size(); i++) {
             PlaceData place = places.get(i);
             addMarker(place.getLatitude(), place.getLongitude(), i);
+        }*/
+
+        Cursor places = RepoApp.getInstance().getPlacesCursor();
+        if (places != null) {
+            places.moveToFirst();
+            while (places.moveToNext()) {
+                double latitude = places.getDouble(places.getColumnIndex(DataBase.PLACES_LATITUDE_COLUMN));
+                double longitude = places.getDouble(places.getColumnIndex(DataBase.PLACES_LONGITUDE_COLUMN));
+                int id = places.getInt(places.getColumnIndex(DataBase.PLACES_ID_COLUMN));
+                addMarker(latitude, longitude, id);
+            }
         }
     }
 }

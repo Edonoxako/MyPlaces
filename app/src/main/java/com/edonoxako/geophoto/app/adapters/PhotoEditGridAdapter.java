@@ -7,7 +7,7 @@ import android.view.ViewGroup;
 import android.widget.*;
 import com.edonoxako.geophoto.app.R;
 import com.edonoxako.geophoto.app.RepoApp;
-import com.edonoxako.geophoto.app.ui.EditPlaceFragment;
+import com.edonoxako.geophoto.app.ui.editplacefragment.EditPlaceFragment;
 import com.edonoxako.geophoto.app.ui.SquaredImageButton;
 import com.edonoxako.geophoto.app.ui.SquaredImageView;
 import com.squareup.picasso.Picasso;
@@ -20,26 +20,11 @@ public class PhotoEditGridAdapter extends BaseAdapter {
     private Context context;
     private EditPlaceFragment.EditPlaceListener listener;
     private List<String> paths;
-    private int placeId = -1;
-    private LayoutInflater inflater;
-
-    public PhotoEditGridAdapter(Context context, int placeId) {
-        this.context = context;
-        this.placeId = placeId;
-        this.paths = RepoApp.getInstance().getPlaces().get(placeId).getAllPhotos();
-    }
 
     public PhotoEditGridAdapter(Context context, List<String> paths, EditPlaceFragment.EditPlaceListener listener) {
         this.context = context;
         this.paths = paths;
         this.listener = listener;
-        inflater = (LayoutInflater) this.context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-    }
-
-    public void update() {
-        if (placeId != -1) {
-            paths = RepoApp.getInstance().getPlaces().get(placeId).getAllPhotos();
-        }
     }
 
     @Override

@@ -5,15 +5,19 @@ import android.app.Service;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.IBinder;
+import android.util.Log;
 import com.android.volley.NoConnectionError;
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.ImageRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
+import com.edonoxako.geophoto.app.MainActivity;
 import com.edonoxako.geophoto.app.RepoApp;
+import com.edonoxako.geophoto.app.backend.dbtasks.*;
 import org.json.JSONObject;
 
 import java.io.File;
@@ -27,10 +31,10 @@ public class DataWorkerService extends Service {
 
     private static final String TAG = "DataWorkerService";
 
-    private DataWorkerBinder binder = new DataWorkerBinder();
     private PendingIntent listenerPendingIntent;
+    private WorkerBinder binder = new WorkerBinder();
 
-    public static final int LOADING_DATA_SUCCEED = 1;
+    public static final int DATA_CHANGED_SUCCESFULLY = 1;
     public static final int LOADING_DATA_CRASHED = 2;
     public static final int NO_INTERNET_CONNECTION = 3;
 
@@ -40,63 +44,27 @@ public class DataWorkerService extends Service {
     private static final String URL = "http://interesnee.ru/files/android-middle-level-data.json";
 
     private DAO dao;
-    private boolean isFirstLaunch;
 
     @Override
     public void onCreate() {
         super.onCreate();
-        dao = new DAO(this);
+        dao = DAO.getInstance(this);
+    }
 
-        SharedPreferences prefs = getSharedPreferences(PREFS, MODE_PRIVATE);
-        isFirstLaunch = prefs.getBoolean(FIRST_LAUNCH_PREFS, true);
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        listenerPendingIntent = intent.getParcelableExtra(RepoApp.PENDING_INTENT_EXTRA);
+        return super.onStartCommand(intent, flags, startId);
     }
 
     @Override
     public IBinder onBind(Intent intent) {
-        listenerPendingIntent = intent.getParcelableExtra(RepoApp.PENDING_INTENT_EXTRA);
         return binder;
     }
 
     public void getData() {
-
-        if (isFirstLaunch) {
-            JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, URL, new PlaceDataLoadResponseListener(), new PlaceDataLoadResponseErrorListener());
-            NetworkDataFetcherSingleton.getInstance(this).AddToRequestQueue(request);
-        } else {
-
-            if (RepoApp.getInstance().getPlaces().isEmpty()) {
-                dao.loadPlaces(new DAO.DAOListener() {
-                    @Override
-                    public void onPlacesLoaded(List<PlaceData> places) {
-                        RepoApp.getInstance().savePlaces(places);
-                        informListener(LOADING_DATA_SUCCEED);
-                    }
-                });
-            } else {
-                informListener(LOADING_DATA_SUCCEED);
-            }
-        }
-    }
-
-    public void changePlace(int id, PlaceData changedPlace) {
-        RepoApp.getInstance().getPlaces().get(id).setText(changedPlace.getText());
-        RepoApp.getInstance().getPlaces().get(id).setLatitude(changedPlace.getLatitude());
-        RepoApp.getInstance().getPlaces().get(id).setLongitude(changedPlace.getLongitude());
-        RepoApp.getInstance().getPlaces().get(id).setPhotos(changedPlace.getAllPhotos());
-        RepoApp.getInstance().getPlaces().get(id).setLastVisited(changedPlace.getLastVisited());
-
-        dao.changePlace(RepoApp.getInstance().getPlaces().get(id));
-    }
-
-    public void createPlace(PlaceData newPlace) {
-        dao.save(newPlace);
-        dao.loadPlaces(new DAO.DAOListener() {
-            @Override
-            public void onPlacesLoaded(List<PlaceData> places) {
-                RepoApp.getInstance().savePlaces(places);
-                informListener(LOADING_DATA_SUCCEED);
-            }
-        });
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, URL, new PlaceDataLoadResponseListener(), new PlaceDataLoadResponseErrorListener());
+        NetworkDataFetcherSingleton.getInstance(this).AddToRequestQueue(request);
     }
 
     private void informListener(int code) {
@@ -107,31 +75,46 @@ public class DataWorkerService extends Service {
         }
     }
 
-    public void changePlacePosition(int id, double newLatitude, double newLongitude) {
-        RepoApp.getInstance().getPlaces().get(id).setLatitude(newLatitude);
-        RepoApp.getInstance().getPlaces().get(id).setLongitude(newLongitude);
-        dao.changePlace(RepoApp.getInstance().getPlaces().get(id));
-        informListener(LOADING_DATA_SUCCEED);
+    //Database data editing
+    public void changePlaceCoords(int id, double latitude, double longitude) {
+        PlacePositionChangedTask task = new PlacePositionChangedTask(this, id, longitude, latitude);
+        changeDB(task);
     }
 
-    public void removePhoto(int placeId, int photoId) {
-        RepoApp.getInstance().getPlaces().get(placeId).removePhoto(photoId);
-        informListener(LOADING_DATA_SUCCEED);
+    public void saveNewPlace(PlaceData newPlace) {
+        CreatePlaceTask task = new CreatePlaceTask(this, newPlace);
+        changeDB(task);
     }
 
-    public void removePlace(int placeId) {
-        RepoApp.getInstance().getPlaces().get(placeId).removeAllPhotos();
-        dao.delete(RepoApp.getInstance().getPlaces().get(placeId).getId());
-        RepoApp.getInstance().getPlaces().remove(placeId);
+    public void changePlace(PlaceData changedPlace) {
+        ChangePlaceTask task = new ChangePlaceTask(this, changedPlace);
+        changeDB(task);
+    }
+
+    public void removePlace(int id) {
+        DeletePlaceTask task = new DeletePlaceTask(this, id);
+        changeDB(task);
+    }
+
+    private void changeDB(final DBTask task) {
+        new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected Void doInBackground(Void... params) {
+                task.runTask();
+                Log.d(TAG, "Editing in background");
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Void aVoid) {
+                super.onPostExecute(aVoid);
+                informListener(DATA_CHANGED_SUCCESFULLY);
+            }
+        }.execute();
     }
 
 
-    public class DataWorkerBinder extends Binder {
-        public DataWorkerService getService() {
-            return DataWorkerService.this;
-        }
-    }
-
+    //Callbacks for network operations
     private class PlaceDataLoadResponseListener implements Response.Listener<JSONObject> {
 
         @Override
@@ -151,19 +134,10 @@ public class DataWorkerService extends Service {
                     dao.save(place);
                 }
 
-                dao.loadPlaces(new DAO.DAOListener() {
-                    @Override
-                    public void onPlacesLoaded(List<PlaceData> places) {
-                        RepoApp.getInstance().savePlaces(places);
-
-                        SharedPreferences.Editor prefs = getSharedPreferences(PREFS, MODE_PRIVATE).edit();
-                        prefs.putBoolean(FIRST_LAUNCH_PREFS, false);
-                        prefs.apply();
-                        isFirstLaunch = false;
-
-                        informListener(LOADING_DATA_SUCCEED);
-                    }
-                });
+                SharedPreferences.Editor prefs = getSharedPreferences(PREFS, MODE_PRIVATE).edit();
+                prefs.putBoolean(FIRST_LAUNCH_PREFS, false);
+                prefs.apply();
+                informListener(DATA_CHANGED_SUCCESFULLY);
 
             } else {
                 informListener(LOADING_DATA_CRASHED);
@@ -212,6 +186,13 @@ public class DataWorkerService extends Service {
             } else {
                 informListener(LOADING_DATA_CRASHED);
             }
+        }
+    }
+
+    //Binder for binding with MainActivity
+    public class WorkerBinder extends Binder {
+        public DataWorkerService getService() {
+            return DataWorkerService.this;
         }
     }
 

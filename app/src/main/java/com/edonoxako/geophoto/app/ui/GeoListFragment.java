@@ -6,9 +6,10 @@ import android.support.v4.app.ListFragment;
 import android.support.v7.app.AppCompatActivity;
 import android.view.*;
 import android.widget.ListView;
+import com.edonoxako.geophoto.app.RepoApp;
+import com.edonoxako.geophoto.app.adapters.PlacesListAdapter;
 import com.edonoxako.geophoto.app.ui.interfaces.DetailedDescriptionInterface;
 import com.edonoxako.geophoto.app.R;
-import com.edonoxako.geophoto.app.adapters.GeoAdapter;
 import com.edonoxako.geophoto.app.ui.interfaces.PresenterActivityListener;
 
 
@@ -19,7 +20,7 @@ public class GeoListFragment extends ListFragment implements PresenterActivityLi
         void setListFragment(GeoListFragment fragment);
         void onViewMap();
     }
-    private GeoAdapter adapter;
+    private PlacesListAdapter adapter;
 
     private GeoListListener listener;
     public GeoListFragment() {
@@ -40,7 +41,6 @@ public class GeoListFragment extends ListFragment implements PresenterActivityLi
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
-        adapter = new GeoAdapter(getActivity());
     }
 
     @Override
@@ -49,8 +49,8 @@ public class GeoListFragment extends ListFragment implements PresenterActivityLi
         ((AppCompatActivity) getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(false);
         listener.setListFragment(this);
         setEmptyText(getActivity().getString(R.string.empty_list_msg));
+        adapter = new PlacesListAdapter(getActivity(), RepoApp.getInstance().getPlacesCursor(), true);
         setListAdapter(adapter);
-
     }
 
     @Override
@@ -68,7 +68,7 @@ public class GeoListFragment extends ListFragment implements PresenterActivityLi
     @Override
     public void onListItemClick(ListView l, View v, int position, long id) {
         super.onListItemClick(l, v, position, id);
-        listener.onShowPlaceInfo(position);
+        listener.onShowPlaceInfo((int) id);
     }
 
     @Override
@@ -88,6 +88,6 @@ public class GeoListFragment extends ListFragment implements PresenterActivityLi
 
     @Override
     public void onPlacesLoaded() {
-        adapter.notifyDataSetChanged();
+        adapter.swapCursor(RepoApp.getInstance().getPlacesCursor());
     }
 }

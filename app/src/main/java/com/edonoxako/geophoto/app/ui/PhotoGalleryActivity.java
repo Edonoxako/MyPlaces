@@ -1,6 +1,8 @@
 package com.edonoxako.geophoto.app.ui;
 
 import android.annotation.TargetApi;
+import android.app.LoaderManager;
+import android.database.Cursor;
 import android.os.Build;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
@@ -16,13 +18,15 @@ import android.view.WindowManager;
 import com.edonoxako.geophoto.app.MainActivity;
 import com.edonoxako.geophoto.app.R;
 import com.edonoxako.geophoto.app.RepoApp;
+import com.edonoxako.geophoto.app.backend.DataBase;
 import com.edonoxako.geophoto.app.backend.PlaceData;
+import com.edonoxako.geophoto.app.backend.callbacks.PlaceCallback;
+import com.edonoxako.geophoto.app.backend.loaders.LoadersFactory;
 
 
 public class PhotoGalleryActivity extends AppCompatActivity implements View.OnClickListener {
 
     private ViewPager mPager;
-    private PlaceData currentPlace;
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     @Override
@@ -31,12 +35,26 @@ public class PhotoGalleryActivity extends AppCompatActivity implements View.OnCl
         setContentView(R.layout.photo_gallery_activity);
 
         int id = getIntent().getIntExtra(MainActivity.CURRENT_PLACE_ID, 0);
-        currentPlace = RepoApp.getInstance().getPlaces().get(id);
-        
-        PhotoPagerAdapter adapter = new PhotoPagerAdapter(getSupportFragmentManager());
+        final int position = getIntent().getIntExtra(MainActivity.PHOTO_GRID_POSITION, -1);
+
+        Bundle args = new Bundle();
+        args.putInt(RepoApp.PLACE_ID_EXTRA, id);
+
         mPager = (ViewPager) findViewById(R.id.gallery);
-        mPager.setAdapter(adapter);
         mPager.setOffscreenPageLimit(2);
+
+        LoaderManager.LoaderCallbacks callback = new PlaceCallback(this, new PlaceCallback.LoaderListener() {
+            @Override
+            public void onDataFetched(Cursor cursor) {
+                PhotoPagerAdapter adapter = new PhotoPagerAdapter(getSupportFragmentManager(), cursor);
+                mPager.setAdapter(adapter);
+
+                if (position > -1) {
+                    mPager.setCurrentItem(position);
+                }
+            }
+        });
+        getLoaderManager().initLoader(LoadersFactory.FETCH_PHOTOS_LOADER, args, callback);
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
         final ActionBar bar = getSupportActionBar();
@@ -55,10 +73,6 @@ public class PhotoGalleryActivity extends AppCompatActivity implements View.OnCl
             }
         });
 
-        int position = getIntent().getIntExtra(MainActivity.PHOTO_GRID_POSITION, -1);
-        if (position > -1) {
-            mPager.setCurrentItem(position);
-        }
     }
 
     @Override
@@ -91,18 +105,22 @@ public class PhotoGalleryActivity extends AppCompatActivity implements View.OnCl
 
     public class PhotoPagerAdapter extends FragmentStatePagerAdapter {
 
-        public PhotoPagerAdapter(FragmentManager fm) {
+        private Cursor cursor;
+
+        public PhotoPagerAdapter(FragmentManager fm, Cursor cursor) {
             super(fm);
+            this.cursor = cursor;
         }
 
         @Override
         public Fragment getItem(int position) {
-            return PhotoGalleryItemFragment.newInstance(currentPlace.getPhoto(position));
+            cursor.moveToPosition(position);
+            return PhotoGalleryItemFragment.newInstance(cursor.getString(cursor.getColumnIndex(DataBase.PHOTOS_PATH_COLUMN)));
         }
 
         @Override
         public int getCount() {
-            return currentPlace.photosCount();
+            return cursor.getCount();
         }
     }
 

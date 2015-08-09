@@ -1,4 +1,4 @@
-package com.edonoxako.geophoto.app.ui;
+package com.edonoxako.geophoto.app.ui.editplacefragment;
 
 import android.app.Activity;
 import android.content.Context;
@@ -6,26 +6,19 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
-import android.text.format.DateFormat;
 import android.view.*;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.*;
 import com.edonoxako.geophoto.app.InputValidator;
 import com.edonoxako.geophoto.app.R;
 import com.edonoxako.geophoto.app.RepoApp;
-import com.edonoxako.geophoto.app.adapters.PhotoEditGridAdapter;
 import com.edonoxako.geophoto.app.backend.PlaceData;
 import com.edonoxako.geophoto.app.ui.interfaces.BackNavigateListener;
 import com.edonoxako.geophoto.app.ui.interfaces.DateSetterListener;
 import com.edonoxako.geophoto.app.ui.interfaces.PhotoFetcherListener;
-import com.edonoxako.geophoto.app.ui.interfaces.PresenterActivityListener;
-
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
 
 
-public class EditPlaceFragment extends Fragment implements PhotoFetcherListener, PresenterActivityListener, DateSetterListener {
+public class EditPlaceFragment extends Fragment implements PhotoFetcherListener, DateSetterListener {
 
     public interface EditPlaceListener {
         void setEditPlaceFragment(EditPlaceFragment fragment);
@@ -37,25 +30,15 @@ public class EditPlaceFragment extends Fragment implements PhotoFetcherListener,
 
     private EditPlaceListener listener;
     private BackNavigateListener backNavigateListener;
+    private PlaceEditorStrategy editor;
+    private ViewHolder holder;
 
-    private PhotoEditGridAdapter adapter;
     private int mPlaceId;
-
-    private double mLongitude;
-    private double mLatitude;
-    private boolean creatingNewPlace = false;
-    private EditText editDescriptionText;
-
-    private EditText editLatitudeText;
-    private EditText editLongitudeText;
-    private GridView editPhotoGridView;
-    private EditText dateEditText;
 
     public static final String PLACE_ID_ARGUMENT = "placeId";
 
     public static final String LATITUDE_ARGUMENT = "latitude";
     public static final String LONGITUDE_ARGUMENT = "longitude";
-    private List<String> photoPaths;
 
     public EditPlaceFragment() {
     }
@@ -96,15 +79,11 @@ public class EditPlaceFragment extends Fragment implements PhotoFetcherListener,
         mPlaceId = getArguments().getInt(PLACE_ID_ARGUMENT);
 
         if (mPlaceId == -1) {
-            creatingNewPlace = true;
-            mLatitude = getArguments().getDouble(LATITUDE_ARGUMENT);
-            mLongitude = getArguments().getDouble(LONGITUDE_ARGUMENT);
-            photoPaths = new ArrayList<String>();
+            editor = new NewPlaceEditorStrategy(getActivity(), getArguments().getDouble(LONGITUDE_ARGUMENT), getArguments().getDouble(LATITUDE_ARGUMENT), listener);
         } else {
-            photoPaths = new ArrayList<String>(RepoApp.getInstance().getPlaces().get(mPlaceId).getAllPhotos());
+            editor = new ExistingPlaceEditorStrategy(getActivity(), mPlaceId, listener);
         }
-
-        adapter = new PhotoEditGridAdapter(getActivity(), photoPaths, listener);
+        editor.init();
     }
 
     @Nullable
@@ -112,20 +91,23 @@ public class EditPlaceFragment extends Fragment implements PhotoFetcherListener,
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.edit_geo_fragment_layout, container, false);
 
-        editDescriptionText = (EditText) view.findViewById(R.id.editDescriptionText);
-        editLatitudeText = (EditText) view.findViewById(R.id.latitudeEditText);
-        editLongitudeText = (EditText) view.findViewById(R.id.longitudeEditText);
-        dateEditText = (EditText) view.findViewById(R.id.dateEditText);
+        holder = new ViewHolder();
+
+        holder.editDescriptionText = (EditText) view.findViewById(R.id.editDescriptionText);
+        holder.editLatitudeText = (EditText) view.findViewById(R.id.latitudeEditText);
+        holder.editLongitudeText = (EditText) view.findViewById(R.id.longitudeEditText);
+        holder.dateEditText = (EditText) view.findViewById(R.id.dateEditText);
 
         view.findViewById(R.id.calendarBtn).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                listener.onChooseDate(dateEditText.getText().toString());
+                listener.onChooseDate(holder.dateEditText.getText().toString());
             }
         });
 
-        editPhotoGridView = (GridView) view.findViewById(R.id.editPhotoGridView);
-        registerForContextMenu(editPhotoGridView);
+        holder.editPhotoGridView = (GridView) view.findViewById(R.id.editPhotoGridView);
+        registerForContextMenu(holder.editPhotoGridView);
+        editor.setViewHolder(holder);
 
         return view;
     }
@@ -135,21 +117,12 @@ public class EditPlaceFragment extends Fragment implements PhotoFetcherListener,
         super.onActivityCreated(savedInstanceState);
         ((AppCompatActivity) getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         listener.setEditPlaceFragment(this);
-        editPhotoGridView.setAdapter(adapter);
+        editor.displayData();
+    }
 
-        if (creatingNewPlace) {
-            editLatitudeText.setText(String.valueOf(mLatitude));
-            editLongitudeText.setText(String.valueOf(mLongitude));
-            dateEditText.setText(DateFormat.format("dd.MM.yyyy", new Date()).toString());
-
-        } else {
-            PlaceData place = RepoApp.getInstance().getPlaces().get(mPlaceId);
-            editDescriptionText.setText("Type description here");
-            editDescriptionText.setText(place.getText());
-            editLatitudeText.setText(String.valueOf(place.getLatitude()));
-            editLongitudeText.setText(String.valueOf(place.getLongitude()));
-            dateEditText.setText(place.getLastVisited());
-        }
+    @Override
+    public void onViewStateRestored(@Nullable Bundle savedInstanceState) {
+        super.onViewStateRestored(savedInstanceState);
     }
 
     @Override
@@ -161,8 +134,7 @@ public class EditPlaceFragment extends Fragment implements PhotoFetcherListener,
     @Override
     public boolean onContextItemSelected(MenuItem item) {
         int pos = ((AdapterView.AdapterContextMenuInfo) item.getMenuInfo()).position;
-        photoPaths.remove(pos);
-        adapter.notifyDataSetChanged();
+        editor.removePhoto(pos);
         return super.onContextItemSelected(item);
     }
 
@@ -176,13 +148,8 @@ public class EditPlaceFragment extends Fragment implements PhotoFetcherListener,
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.save_place_action) {
             hideKeyboard();
-            if (creatingNewPlace) {
-                PlaceData newPlace = gatherData();
-                if (newPlace != null)listener.onSaveNewPlace(newPlace);
-            } else {
-                PlaceData changedPlace = gatherData();
-                if (changedPlace != null)listener.onSavePlaceChanges(mPlaceId, changedPlace);
-            }
+            PlaceData place = gatherData();
+            if (place != null) editor.performEdit(place);
         } else if (item.getItemId() == android.R.id.home) {
             hideKeyboard();
             backNavigateListener.onNavigateBack();
@@ -194,17 +161,18 @@ public class EditPlaceFragment extends Fragment implements PhotoFetcherListener,
         PlaceData place = new PlaceData();
 
         InputValidator validator = new InputValidator(getActivity());
-        validator.addTexts(editDescriptionText);
-        validator.addNumbers(editLongitudeText, -180, 180);
-        validator.addNumbers(editLatitudeText, -90, 90);
-        validator.addDates(dateEditText);
+        validator.addTexts(holder.editDescriptionText);
+        validator.addNumbers(holder.editLongitudeText, -180, 180);
+        validator.addNumbers(holder.editLatitudeText, -90, 90);
+        validator.addDates(holder.dateEditText);
 
         if (validator.validate()) {
-            place.setText(editDescriptionText.getText().toString());
-            place.setLatitude(Double.valueOf(editLatitudeText.getText().toString()));
-            place.setLongitude(Double.valueOf(editLongitudeText.getText().toString()));
-            place.setPhotos(photoPaths);
-            place.setLastVisited(dateEditText.getText().toString());
+            place.setId(mPlaceId);
+            place.setText(holder.editDescriptionText.getText().toString());
+            place.setLatitude(Double.valueOf(holder.editLatitudeText.getText().toString()));
+            place.setLongitude(Double.valueOf(holder.editLongitudeText.getText().toString()));
+            place.setPhotos(editor.getPhotos());
+            place.setLastVisited(holder.dateEditText.getText().toString());
             return place;
         } else {
             return null;
@@ -222,18 +190,19 @@ public class EditPlaceFragment extends Fragment implements PhotoFetcherListener,
     @Override
     public void onPhotoFetched() {
         String newPhoto = RepoApp.getInstance().getNewPhotoPath();
-        photoPaths.add(newPhoto);
-        adapter.notifyDataSetChanged();
-    }
-
-    @Override
-    public void onPlacesLoaded() {
-        adapter.update();
-        adapter.notifyDataSetChanged();
+        editor.addPhoto(newPhoto);
     }
 
     @Override
     public void onNewDate(String newDate) {
-        dateEditText.setText(newDate);
+        editor.updateDate(newDate);
+    }
+
+    public class ViewHolder {
+        EditText editDescriptionText;
+        EditText editLatitudeText;
+        EditText editLongitudeText;
+        GridView editPhotoGridView;
+        EditText dateEditText;
     }
 }

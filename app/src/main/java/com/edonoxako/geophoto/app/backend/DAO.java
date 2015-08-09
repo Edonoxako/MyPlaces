@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
 
+import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,9 +26,17 @@ public class DAO {
     public static final String PLACE_ID_EXTRA = "PlaceID";
 
     private DataBase dataBase;
+    private static DAO singleton;
 
-    public DAO(Context context) {
+    private DAO(Context context) {
         dataBase = new DataBase(context);
+    }
+
+    public static DAO getInstance(Context context) {
+        if (singleton == null) {
+            singleton = new DAO(context);
+        }
+        return singleton;
     }
 
     public int save(PlaceData place) {
@@ -49,7 +58,7 @@ public class DAO {
             }
         }
 
-        db.close();
+        //db.close();
 
         return (int) rowId;
     }
@@ -58,17 +67,55 @@ public class DAO {
         SQLiteDatabase db = dataBase.getWritableDatabase();
         db.delete(DataBase.PLACES_TABLE, DataBase.PLACES_ID_COLUMN + " = ?", new String[] {String.valueOf(id)});
         db.delete(DataBase.PHOTOS_TABLE, DataBase.PHOTOS_PLACE_ID_COLUMN + " = ?", new String[] {String.valueOf(id)});
-        db.close();
+        //db.close();
     }
 
     public void clearDataBase() {
         SQLiteDatabase db = dataBase.getWritableDatabase();
         db.delete(DataBase.PLACES_TABLE, null, null);
         db.delete(DataBase.PHOTOS_TABLE, null, null);
-        db.close();
+        //db.close();
     }
 
+    public Cursor loadPlace(int id) {
+        SQLiteDatabase db = dataBase.getWritableDatabase();
+        String[] selectionArgs = new String[]{String.valueOf(id)};
+        Cursor cursor = db.query(DataBase.PLACES_TABLE, null, DataBase.PLACES_ID_COLUMN + " = ?", selectionArgs, null, null, null);
+        return cursor;
+    }
 
+    public Cursor loadPlacesWhithPhotoThumbnail() {
+
+        String sqlQuery = "SELECT "
+                        + DataBase.PLACES_TABLE + "." + DataBase.PLACES_ID_COLUMN + ", "
+                        + DataBase.PLACES_TABLE + "." + DataBase.PLACES_LATITUDE_COLUMN + ", "
+                        + DataBase.PLACES_TABLE + "." + DataBase.PLACES_LONGITUDE_COLUMN + ", "
+                        + DataBase.PLACES_TABLE + "." + DataBase.PLACES_TEXT_COLUMN + ", "
+                        + DataBase.PLACES_TABLE + "." + DataBase.PLACES_LAST_VISITED_COLUMN + ", "
+                        + DataBase.PHOTOS_TABLE + "." + DataBase.PHOTOS_PATH_COLUMN
+                        + " FROM "
+                        + DataBase.PLACES_TABLE
+                        + " LEFT JOIN "
+                        + DataBase.PHOTOS_TABLE
+                        + " ON "
+                        + DataBase.PLACES_TABLE + "." + DataBase.PLACES_ID_COLUMN
+                        + " = "
+                        + DataBase.PHOTOS_TABLE + "." + DataBase.PHOTOS_PLACE_ID_COLUMN
+                        + " GROUP BY "
+                        + DataBase.PLACES_TABLE + "." + DataBase.PLACES_ID_COLUMN;
+
+        SQLiteDatabase db = dataBase.getWritableDatabase();
+        Cursor cursor = db.rawQuery(sqlQuery, null);
+        return cursor;
+    }
+
+    public Cursor loadPlaces() {
+        SQLiteDatabase db = dataBase.getWritableDatabase();
+        Cursor c = db.query(DataBase.PLACES_TABLE, null, null, null, null, null, null);
+        return c;
+    }
+
+    //TODO: Этот метод надо будет удалить
     public void loadPlaces(final DAOListener listener) {
         final List<PlaceData> places = new ArrayList<PlaceData>();
 
@@ -95,7 +142,7 @@ public class DAO {
                     }
                 }
 
-                db.close();
+                //db.close();
                 return places;
             }
 
@@ -107,6 +154,31 @@ public class DAO {
         };
 
         loader.execute();
+    }
+
+    public Cursor loadPhotos(int placeId) {
+        SQLiteDatabase db = dataBase.getWritableDatabase();
+
+        String[] columns = new String[]{DataBase.PHOTOS_ID_COLUMN, DataBase.PHOTOS_PATH_COLUMN};
+        String[] selectionArgs = new String[]{String.valueOf(placeId)};
+
+        Cursor cursor = db.query(DataBase.PHOTOS_TABLE, columns, DataBase.PHOTOS_PLACE_ID_COLUMN + " = ?", selectionArgs, null, null, null);
+        return cursor;
+    }
+
+    public void close() {
+        dataBase.close();
+        singleton = null;
+    }
+
+    public void changePlaceCoords(int placeId, double newLatitude, double newLongitude) {
+        ContentValues cv = new ContentValues();
+        cv.put(DataBase.PLACES_LONGITUDE_COLUMN, newLongitude);
+        cv.put(DataBase.PLACES_LATITUDE_COLUMN, newLatitude);
+
+        String[] whereArgs = new String[]{String.valueOf(placeId)};
+        SQLiteDatabase db = dataBase.getWritableDatabase();
+        db.update(DataBase.PLACES_TABLE, cv, DataBase.PLACES_ID_COLUMN + " = ?", whereArgs);
     }
 
     private PlaceData createPlace(Cursor c) {
@@ -133,7 +205,7 @@ public class DAO {
                 photos.add(path);
             }
         }
-        c.close();
+        //c.close();
 
         return photos;
     }
@@ -157,7 +229,7 @@ public class DAO {
             db.insert(DataBase.PHOTOS_TABLE, null, cv);
         }
 
-        db.close();
+        //db.close();
     }
 
 }

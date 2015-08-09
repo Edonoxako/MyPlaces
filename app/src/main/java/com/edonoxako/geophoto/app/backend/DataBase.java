@@ -12,13 +12,13 @@ public class DataBase extends SQLiteOpenHelper {
     public static final String PLACES_TABLE = "Places";
     public static final String PHOTOS_TABLE = "Photos";
 
-    public static final String PLACES_ID_COLUMN = "ID";
+    public static final String PLACES_ID_COLUMN = "_id";
     public static final String PLACES_LONGITUDE_COLUMN = "Longitude";
     public static final String PLACES_LATITUDE_COLUMN = "Latitude";
     public static final String PLACES_TEXT_COLUMN = "Text";
     public static final String PLACES_LAST_VISITED_COLUMN = "LastVisited";
 
-    public static final String PHOTOS_ID_COLUMN = "ID";
+    public static final String PHOTOS_ID_COLUMN = "_id";
     public static final String PHOTOS_PATH_COLUMN = "Path";
     public static final String PHOTOS_PLACE_ID_COLUMN = "PlaceID";
 
