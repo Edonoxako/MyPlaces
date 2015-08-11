@@ -13,6 +13,7 @@ import com.edonoxako.geophoto.app.backend.loaders.LoadersFactory;
 
 import java.util.List;
 
+
 public class ExistingPlaceEditorStrategy implements PlaceEditorStrategy {
 
     private int placeId;
@@ -68,11 +69,13 @@ public class ExistingPlaceEditorStrategy implements PlaceEditorStrategy {
         LoaderManager.LoaderCallbacks placeCallback = new PlaceCallback(activity, new PlaceCallback.LoaderListener() {
             @Override
             public void onDataFetched(Cursor cursor) {
-                cursor.moveToFirst();
-                holder.editLatitudeText.setText(cursor.getString(cursor.getColumnIndex(DataBase.PLACES_LATITUDE_COLUMN)));
-                holder.editLongitudeText.setText(cursor.getString(cursor.getColumnIndex(DataBase.PLACES_LONGITUDE_COLUMN)));
-                holder.dateEditText.setText(cursor.getString(cursor.getColumnIndex(DataBase.PLACES_LAST_VISITED_COLUMN)));
-                holder.editDescriptionText.setText(cursor.getString(cursor.getColumnIndex(DataBase.PLACES_TEXT_COLUMN)));
+                if (cursor.getCount() != 0) {
+                    cursor.moveToFirst();
+                    holder.editLatitudeText.setText(cursor.getString(cursor.getColumnIndex(DataBase.PLACES_LATITUDE_COLUMN)));
+                    holder.editLongitudeText.setText(cursor.getString(cursor.getColumnIndex(DataBase.PLACES_LONGITUDE_COLUMN)));
+                    holder.dateEditText.setText(cursor.getString(cursor.getColumnIndex(DataBase.PLACES_LAST_VISITED_COLUMN)));
+                    holder.editDescriptionText.setText(cursor.getString(cursor.getColumnIndex(DataBase.PLACES_TEXT_COLUMN)));
+                }
             }
         });
 

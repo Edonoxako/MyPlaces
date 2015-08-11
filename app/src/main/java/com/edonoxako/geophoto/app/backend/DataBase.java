@@ -22,6 +22,7 @@ public class DataBase extends SQLiteOpenHelper {
     public static final String PHOTOS_PATH_COLUMN = "Path";
     public static final String PHOTOS_PLACE_ID_COLUMN = "PlaceID";
 
+
     public DataBase(Context context) {
         super(context, DB_NAME, null, 1);
     }

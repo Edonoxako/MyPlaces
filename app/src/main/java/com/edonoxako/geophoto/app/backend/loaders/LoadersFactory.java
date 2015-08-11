@@ -2,7 +2,6 @@ package com.edonoxako.geophoto.app.backend.loaders;
 
 import android.content.Context;
 import android.content.Loader;
-import android.os.Bundle;
 
 
 public class LoadersFactory {
@@ -23,9 +22,4 @@ public class LoadersFactory {
                 return null;
         }
     }
-
-    public Loader getAllDataLoader(Context context) {
-        return new PlacesLoader(context);
-    }
-
 }

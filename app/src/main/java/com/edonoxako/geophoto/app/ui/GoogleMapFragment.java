@@ -12,15 +12,12 @@ import com.edonoxako.geophoto.app.backend.DataBase;
 import com.edonoxako.geophoto.app.ui.interfaces.DetailedDescriptionInterface;
 import com.edonoxako.geophoto.app.R;
 import com.edonoxako.geophoto.app.RepoApp;
-import com.edonoxako.geophoto.app.backend.PlaceData;
 import com.edonoxako.geophoto.app.ui.interfaces.PresenterActivityListener;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-
-import java.util.List;
 
 
 public class GoogleMapFragment extends SupportMapFragment implements PresenterActivityListener {
@@ -124,13 +121,8 @@ public class GoogleMapFragment extends SupportMapFragment implements PresenterAc
     @Override
     public void onPlacesLoaded() {
         map.clear();
-        /*List<PlaceData> places = RepoApp.getInstance().getPlaces();
-        for (int i = 0; i < places.size(); i++) {
-            PlaceData place = places.get(i);
-            addMarker(place.getLatitude(), place.getLongitude(), i);
-        }*/
-
         Cursor places = RepoApp.getInstance().getPlacesCursor();
+
         if (places != null) {
             places.moveToFirst();
             while (places.moveToNext()) {

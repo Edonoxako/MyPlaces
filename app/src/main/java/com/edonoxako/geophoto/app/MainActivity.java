@@ -14,6 +14,7 @@ import com.edonoxako.geophoto.app.backend.DAO;
 import com.edonoxako.geophoto.app.backend.DataWorkerService;
 import com.edonoxako.geophoto.app.backend.PlaceData;
 import com.edonoxako.geophoto.app.backend.loaders.LoadersFactory;
+import com.edonoxako.geophoto.app.backend.loaders.PlacesLoader;
 import com.edonoxako.geophoto.app.ui.*;
 import com.edonoxako.geophoto.app.ui.editplacefragment.EditPlaceFragment;
 import com.edonoxako.geophoto.app.ui.interfaces.BackNavigateListener;
@@ -41,8 +42,6 @@ public class MainActivity extends AppCompatActivity implements
     boolean isFirstLaunch = false;
 
     private static final String EDIT_PLACE_FRAGMENT_TAG = "EditPlace";
-    private static final String GEO_LIST_FRAGMENT_TAG = "GeoList";
-    private static final String GOOGLE_MAP_FRAGMENT_TAG = "GoogleMap";
     private static final String PLACE_DESCRIPTION_FRAGMENT_TAG = "PlaceDescription";
 
     public static final String PHOTO_GRID_POSITION = "photoGridPosition";
@@ -135,7 +134,7 @@ public class MainActivity extends AppCompatActivity implements
     //Loader callbacks
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        return new LoadersFactory().getAllDataLoader(this);
+        return new PlacesLoader(this);
     }
 
     @Override

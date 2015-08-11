@@ -43,13 +43,6 @@ public class DataWorkerService extends Service {
 
     private static final String URL = "http://interesnee.ru/files/android-middle-level-data.json";
 
-    private DAO dao;
-
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        dao = DAO.getInstance(this);
-    }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -131,7 +124,7 @@ public class DataWorkerService extends Service {
 
                     place.removePhoto(0);
                     place.addPhoto("file:" + file.getAbsolutePath());
-                    dao.save(place);
+                    DAO.getInstance(DataWorkerService.this).save(place);
                 }
 
                 SharedPreferences.Editor prefs = getSharedPreferences(PREFS, MODE_PRIVATE).edit();

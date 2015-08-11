@@ -1,12 +1,10 @@
 package com.edonoxako.geophoto.app.adapters;
 
 import android.content.Context;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.*;
 import com.edonoxako.geophoto.app.R;
-import com.edonoxako.geophoto.app.RepoApp;
 import com.edonoxako.geophoto.app.ui.editplacefragment.EditPlaceFragment;
 import com.edonoxako.geophoto.app.ui.SquaredImageButton;
 import com.edonoxako.geophoto.app.ui.SquaredImageView;

@@ -20,7 +20,6 @@ public class NewPlaceEditorStrategy implements PlaceEditorStrategy {
     private EditPlaceFragment.EditPlaceListener listener;
     private PhotoEditGridAdapter adapter;
 
-    private static final String PHOTOS_STATE = "photosState";
 
     public NewPlaceEditorStrategy(Context context, double longitude, double latitude, EditPlaceFragment.EditPlaceListener listener) {
         this.longitude = longitude;

@@ -8,13 +8,10 @@ import android.view.ViewGroup;
 import android.widget.CursorAdapter;
 import android.widget.TextView;
 import com.edonoxako.geophoto.app.R;
-import com.edonoxako.geophoto.app.RepoApp;
 import com.edonoxako.geophoto.app.backend.DataBase;
-import com.edonoxako.geophoto.app.backend.PlaceData;
 import com.edonoxako.geophoto.app.ui.SquaredImageView;
 import com.squareup.picasso.Picasso;
 
-import java.io.File;
 
 public class PlacesListAdapter extends CursorAdapter {
 

@@ -15,6 +15,7 @@
     <string name="remove_place_btn">Remove place</string>
     <string name="add_photo_btn">Add</string>
     <string name="save_place">Save</string>
+    <string name="search_btn">Search</string>
 
     <string name="no_connection_msg">There is no internet connection</string>
     <string name="error_msg">Something has gone wrong</string>
@@ -31,4 +32,6 @@
     <string name="wrong_date_error_msg">Wrong date</string>
 
     <string name="empty_list_msg">No places</string>
+
+    <string name="search_hint">Place name</string>
 </resources>

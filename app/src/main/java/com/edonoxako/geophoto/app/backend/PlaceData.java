@@ -84,20 +84,8 @@ public class PlaceData {
         return photos;
     }
 
-    public void removeAllPhotos() {
-        photos.clear();
-    }
-
-    public void removePhoto(String photoPath) {
-        photos.remove(photoPath);
-    }
-
     public void removePhoto(int id) {
         if (id < photos.size()) photos.remove(id);
-    }
-
-    public int photosCount() {
-        return photos.size();
     }
 
 }

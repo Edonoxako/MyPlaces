@@ -19,7 +19,6 @@ import com.edonoxako.geophoto.app.MainActivity;
 import com.edonoxako.geophoto.app.R;
 import com.edonoxako.geophoto.app.RepoApp;
 import com.edonoxako.geophoto.app.backend.DataBase;
-import com.edonoxako.geophoto.app.backend.PlaceData;
 import com.edonoxako.geophoto.app.backend.callbacks.PlaceCallback;
 import com.edonoxako.geophoto.app.backend.loaders.LoadersFactory;
 
